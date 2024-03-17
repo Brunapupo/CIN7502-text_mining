@@ -133,3 +133,16 @@ else:
     print("Nenhum valor encontrado.")
 
 print('------------------------------------------------------------------\n')
+
+# 10. Só os dias pares de janeiro (formato do EUA), busca genérica, com exceção do dia 10
+regex_dias_pares_brasil_ex10 = r'\b(02|04|06|08|12|14|16|18|20|22|24|26|28|30)/01/\d{4}\b(?=\s*US\$)'
+match_dias_pares_brasil_ex10 = re.findall(regex_dias_pares_brasil_ex10, banco)
+print('10. Só os dias pares de janeiro (formato do Brasil),/nbusca genérica, com exceção do dia 10:')
+print()
+if match_dias_pares_brasil_ex10:
+    for dias_pares_brasil_ex10 in match_dias_pares_brasil_ex10:
+        print(dias_pares_brasil_ex10)
+else:
+    print("Nenhum valor encontrado.")
+
+print('------------------------------------------------------------------\n')
