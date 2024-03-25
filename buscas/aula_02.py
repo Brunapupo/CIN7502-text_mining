@@ -2,11 +2,15 @@ import re
 caminho_do_arquivo_2 = '../database/cin7502_texto02.txt'
 import re
 caminho_do_arquivo_3 = '../database/cin7502_texto03.txt'
+import re
+caminho_do_arquivo_4 = '../database/cin7502_texto04.txt'
 
 with open(caminho_do_arquivo_2, 'r', encoding='utf-8') as file:
     banco_2 = file.read()
 with open(caminho_do_arquivo_3, 'r', encoding='utf-8') as file:
     banco_3 = file.read() 
+with open(caminho_do_arquivo_4, 'r', encoding='utf-8') as file:
+    banco_4 = file.read() 
 
 # 1 - Escreva uma regex que capture as sete palavras da lista abaixo (com exatos 7 matchs)
 regex_sete_palavras = r'\b\w+\b'
@@ -35,3 +39,20 @@ else:
     print("Nenhum valor encontrado.")
 
 print('------------------------------------------------------------------\n')
+
+# 3 - Escreva uma regex específica que capture todos os possíveis formatos de ordem de serviço de determinada empresa.
+regex_ordem_servico = r"(OS)(-|#|\s| )?(nn| nn)(-| |n)(n+.*)"
+match_ordem_servico = re.findall(regex_ordem_servico, banco_4)
+print('3. Escreva uma regex específica que capture todos os possíveis formatos de ordem de serviço de determinada empresa: ')
+if match_ordem_servico:
+    for ordem_servico in match_ordem_servico:
+        # Verificamos se a correspondência é uma tupla e fazemos join, ou simplesmente imprimimos a string
+        if isinstance(ordem_servico, tuple):
+            print(''.join(ordem_servico))
+        else:
+            print(ordem_servico)
+else:
+    print("Nenhum valor encontrado.")
+
+print('------------------------------------------------------------------\n')
+
