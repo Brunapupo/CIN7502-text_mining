@@ -4,6 +4,13 @@ import re
 caminho_do_arquivo_3 = '../database/cin7502_texto03.txt'
 import re
 caminho_do_arquivo_4 = '../database/cin7502_texto04.txt'
+import re
+caminho_do_arquivo_5 = '../database/cin7502_texto05.txt'
+import re
+caminho_do_arquivo_6 = '../database/cin7502_texto06.txt'
+import re
+caminho_do_arquivo_7 = '../database/cin7502_texto07.txt'
+
 
 with open(caminho_do_arquivo_2, 'r', encoding='utf-8') as file:
     banco_2 = file.read()
@@ -11,6 +18,12 @@ with open(caminho_do_arquivo_3, 'r', encoding='utf-8') as file:
     banco_3 = file.read() 
 with open(caminho_do_arquivo_4, 'r', encoding='utf-8') as file:
     banco_4 = file.read() 
+with open(caminho_do_arquivo_5, 'r', encoding='utf-8') as file:
+    banco_5 = file.read() 
+with open(caminho_do_arquivo_6, 'r', encoding='utf-8') as file:
+    banco_6 = file.read() 
+with open(caminho_do_arquivo_7, 'r', encoding='utf-8') as file:
+    banco_7 = file.read() 
 
 # 1 - Escreva uma regex que capture as sete palavras da lista abaixo (com exatos 7 matchs)
 regex_sete_palavras = r'\b\w+\b'
@@ -56,3 +69,51 @@ else:
 
 print('------------------------------------------------------------------\n')
 
+# 4 - Construa uma expressão regular específica que capture todos os valores monetários existentes no texto (marcados em amarelo).
+regex_yellow_text = r"R\$\s?-?[0-9]+,[0-9]+|\d{1,3}(?:\.\d{3})*(?:,\d{2})?\sreais"
+match_yellow_text = re.findall(regex_yellow_text, banco_5)
+print('4. Construa uma expressão regular específica que capture todos os valores monetários existentes no texto (marcados em amarelo): ')
+if match_yellow_text:
+    for yellow_text in match_yellow_text:
+        # Verificamos se a correspondência é uma tupla e fazemos join, ou simplesmente imprimimos a string
+        if isinstance(yellow_text, tuple):
+            print(''.join(yellow_text))
+        else:
+            print(yellow_text)
+else:
+    print("Nenhum valor encontrado.")
+
+print('------------------------------------------------------------------\n')
+
+# 5 - Construa uma expressão regular específica que capture as linhas que começam por números e terminam com palavras.
+regex_floripa = r"^[0-9]+\. \w+(?:\s\w+)*\s*$"
+match_floripa = re.findall(regex_floripa, banco_6, re.MULTILINE)
+print('5. Construa uma expressão regular específica que capture as linhas que começam por números e terminam com palavras: ')
+if match_floripa:
+    for floripa in match_floripa:
+        # Verificamos se a correspondência é uma tupla e fazemos join, ou simplesmente imprimimos a string
+        if isinstance(floripa, tuple):
+            print(''.join(floripa))
+        else:
+            print(floripa)
+else:
+    print("Nenhum valor encontrado.")
+
+print('------------------------------------------------------------------\n')
+
+# 6 - Construa uma expressão regular específica que capture todas as linhas que estão em azul e nenhuma das que estão em vermelho.
+# importante: a regex precisa ter, no máximo, 13 caracteres.
+regex_yellow_text = r"^[0-9]+\. \w+(?:\s\w+)*\s*$"
+match_yellow_text = re.findall(regex_yellow_text, banco_7)
+print('5. Construa uma expressão regular específica que capture as linhas que começam por números e terminam com palavras: ')
+if match_yellow_text:
+    for yellow_text in match_yellow_text:
+        # Verificamos se a correspondência é uma tupla e fazemos join, ou simplesmente imprimimos a string
+        if isinstance(yellow_text, tuple):
+            print(''.join(yellow_text))
+        else:
+            print(yellow_text)
+else:
+    print("Nenhum valor encontrado.")
+
+print('------------------------------------------------------------------\n')
