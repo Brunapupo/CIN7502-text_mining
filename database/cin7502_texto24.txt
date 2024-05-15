@@ -1,0 +1,5 @@
+Item,Quantidade,Da Estação?, ,
+Maçãs,50,Sim, ,
+Laranjas,109,Não,x,
+Peras,12,Sim, ,
+Kiwis,72,Sim,!!,

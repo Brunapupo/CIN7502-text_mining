@@ -1,0 +1,2 @@
+contractions==0.1.73
+selenium==4.19.0
