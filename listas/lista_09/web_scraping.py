@@ -1,33 +1,98 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-import contractions
 import time
-import re  # Importe o módulo re
+import re
 import pandas as pd
+import string
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from bs4 import BeautifulSoup
+import unicodedata
+import os
+import nltk
+
+nltk.download("punkt")
+nltk.download("stopwords")
 
 # O webscraping, também conhecido como raspagem de dados da web, é uma técnica utilizada para extrair informações de páginas da internet.
 # Selenium - literalmente abre um googleChrome para buscar as coisa que queremos
-# Service é usado apra abrir uma instância do Chome WebDriver
+# Service é usado para abrir uma instância do Chrome WebDriver
 service = Service()
 options = webdriver.ChromeOptions()
 driver = webdriver.Chrome(service=service, options=options)
 
-# 01 - Sinopse Dune.
+
+# Função para limpeza textual
+def clean_text(text):
+    # Remover tags HTML
+    text = BeautifulSoup(text, "html.parser").get_text()
+    # Remover pontuação
+    text = text.translate(str.maketrans("", "", string.punctuation))
+    # Remover acentuação
+    text = (
+        unicodedata.normalize("NFKD", text)
+        .encode("ascii", "ignore")
+        .decode("utf-8", "ignore")
+    )
+    # Remover números
+    text = re.sub(r"\d+", "", text)
+    return text
+
+
+# Função para remover frases sem valor semântico
+def remove_non_semantic(text):
+    sentences = text.split(".")
+    meaningful_sentences = [
+        sentence.strip() for sentence in sentences if len(sentence.split()) > 4
+    ]
+    return " ".join(meaningful_sentences)
+
+
+# Função para tokenização
+def tokenize(text):
+    return word_tokenize(text)
+
+
+# Função para remoção de stopwords
+def remove_stopwords(tokens):
+    stop_words = set(stopwords.words("portuguese"))
+    filtered_tokens = [word for word in tokens if word.lower() not in stop_words]
+    return filtered_tokens
+
+
+# Função para normalização completa do texto
+def normalize_text(text):
+    text = clean_text(text)
+    text = remove_non_semantic(text)
+    tokens = tokenize(text)
+    tokens = remove_stopwords(tokens)
+    return " ".join(tokens)
+
+
+output_dir = "arquivos"
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+
+# Sinopse de Dune
+print("Processando sinopse de Dune...")
 url = "https://www.adorocinema.com/filmes/filme-133392/"
 driver.get(url)
 url_dune = driver.page_source
 regex_dune = r'<p class="bo-p">(.*?)</p>'
 match_dune = re.findall(regex_dune, url_dune, re.DOTALL)
-df = pd.DataFrame({"Sinopse": match_dune})
-df.to_csv("sinopse_dune.txt", index=False, sep="\t")
-print("01 - Sinopse Dune:\n")
-for sinopse_dune in match_dune:
+print(f"Sinopses encontradas: {len(match_dune)}")
+normalized_synopsis_dune = [normalize_text(synopsis) for synopsis in match_dune]
+df = pd.DataFrame({"Sinopse": normalized_synopsis_dune})
+sinopse_output_path = os.path.join(output_dir, "sinopse_dune_normalized.txt")
+df.to_csv(sinopse_output_path, index=False, sep="\t")
+print(f"Sinopse normalizada salva em: {sinopse_output_path}")
+for sinopse_dune in normalized_synopsis_dune:
     print(sinopse_dune, " \n")
 print(
     "____________________________________________________________________________________\n"
 )
-# 01 - Crítica Dune.
+# Críticas de Dune
 urls_dune = [
     "https://www.adorocinema.com/filmes/filme-133392/criticas/espectadores/",
     "https://www.adorocinema.com/filmes/filme-133392/criticas/espectadores/?page=2",
@@ -46,30 +111,34 @@ for url in urls_dune:
     page_source = driver.page_source
     match_critica = re.findall(regex_critica_dune, page_source, re.DOTALL)
     todas_criticas_dune.extend(match_critica)
-df = pd.DataFrame({"Sinopse": todas_criticas_dune})
-df.to_csv("sinopse_critica_dune.csv", index=False, sep="\t")
-print("01 - Crítica Dune:\n")
-for sinopse_critica_dune in todas_criticas_dune:
-    print(sinopse_critica_dune, " \n")
+normalized_reviews_dune = [normalize_text(review) for review in todas_criticas_dune]
+df = pd.DataFrame({"Crítica": normalized_reviews_dune})
+df.to_csv(
+    os.path.join(output_dir, "critica_dune_normalized.csv"), index=False, sep="\t"
+)
+for critica_dune in normalized_reviews_dune:
+    print(critica_dune, " \n")
 print(
     "____________________________________________________________________________________\n"
 )
 
-# 02 - Sinopse Harry Potter.
+# Sinopse de Harry Potter
+print("Processando sinopse de Harry Potter...")
 url = "https://www.adorocinema.com/filmes/filme-46865/"
 driver.get(url)
 url_potter = driver.page_source
-# 02 - Sinopse Harry Potter.
 regex_potter = r'<p class="bo-p">(.*?)</p>'
 match_potter = re.findall(regex_potter, url_potter, re.DOTALL)
-df = pd.DataFrame({"Sinopse": match_potter})
-df.to_csv("sinopse_potter.txt", index=False, sep="\t")
-print("02 - Sinopse Harry Potter e o Prisioneiro de Azkaban:\n")
-for sinopse_potter in match_potter:
+normalized_synopsis_potter = [normalize_text(synopsis) for synopsis in match_potter]
+df = pd.DataFrame({"Sinopse": normalized_synopsis_potter})
+sinopse_output_path = os.path.join(output_dir, "sinopse_harrypotter_normalized.txt")
+df.to_csv(sinopse_output_path, index=False, sep="\t")
+for sinopse_potter in normalized_synopsis_potter:
     print(sinopse_potter, " \n")
 print(
     "____________________________________________________________________________________\n"
 )
+# Críticas de Harry Potter
 urls_potter = [
     "https://www.adorocinema.com/filmes/filme-46865/criticas/espectadores/",
     "https://www.adorocinema.com/filmes/filme-46865/criticas/espectadores/?page=2",
@@ -87,29 +156,40 @@ for url_potter in urls_potter:
     page_source = driver.page_source
     match_critica = re.findall(regex_critica_potter, page_source, re.DOTALL)
     todas_criticas_potter.extend(match_critica)
-df = pd.DataFrame({"Sinopse": todas_criticas_potter})
-df.to_csv("sinopse_critica_potter.csv", index=False, sep="\t")
-print("01 - Crítica Sinopse Harry Potter e o Prisioneiro de Azkaban:\n")
-for sinopse_critica_potter in todas_criticas_potter:
-    print(sinopse_critica_potter, " \n")
+normalized_reviews_potter = [normalize_text(review) for review in todas_criticas_potter]
+df = pd.DataFrame({"Crítica": normalized_reviews_potter})
+df.to_csv(
+    os.path.join(output_dir, "critica_harrypotter_normalized.csv"),
+    index=False,
+    sep="\t",
+)
+for critica_harrypotter in normalized_reviews_potter:
+    print(critica_harrypotter, " \n")
 print(
     "____________________________________________________________________________________\n"
 )
 
-# 03 - Crepusuculo.
+# Sinopse de Crepúsculo
+print("Processando sinopse de Crepúsculo...")
 url = "https://www.adorocinema.com/filmes/filme-131377/"
 driver.get(url)
 url_crepusculo = driver.page_source
 regex_crepusculo = r'<p class="bo-p">(.*?)</p>'
 match_crepusculo = re.findall(regex_crepusculo, url_crepusculo, re.DOTALL)
-df = pd.DataFrame({"Sinopse": match_crepusculo})
-df.to_csv("sinopse_crepusculo.txt", index=False, sep="\t")
-print("03 - Sinopse Crepusculo:\n")
-for sinopse_crepusculo in match_crepusculo:
+print(f"Sinopses encontradas: {len(match_crepusculo)}")
+normalized_synopsis_crepusculo = [
+    normalize_text(synopsis) for synopsis in match_crepusculo
+]
+df = pd.DataFrame({"Sinopse": normalized_synopsis_crepusculo})
+sinopse_output_path = os.path.join(output_dir, "sinopse_crepusculo_normalized.txt")
+df.to_csv(sinopse_output_path, index=False, sep="\t")
+print(f"Sinopse normalizada salva em: {sinopse_output_path}")
+for sinopse_crepusculo in normalized_synopsis_crepusculo:
     print(sinopse_crepusculo, " \n")
 print(
     "____________________________________________________________________________________\n"
 )
+# Críticas de Crepúsculo
 urls_crepusculo = [
     "https://www.adorocinema.com/filmes/filme-131377/criticas/espectadores/",
     "https://www.adorocinema.com/filmes/filme-131377/criticas/espectadores/?page=2",
@@ -129,32 +209,40 @@ for url_crepusculo in urls_crepusculo:
     page_source = driver.page_source
     match_critica = re.findall(regex_critica_crepusculo, page_source, re.DOTALL)
     todas_criticas_crepusculo.extend(match_critica)
-df = pd.DataFrame({"Sinopse": todas_criticas_crepusculo})
-df.to_csv("sinopse_critica_crepusculo.csv", index=False, sep="\t")
-print("01 - Crítica Crepusculo:\n")
-for sinopse_critica_crepusculo in todas_criticas_crepusculo:
-    print(sinopse_critica_crepusculo, " \n")
+normalized_reviews_crepusculo = [
+    normalize_text(review) for review in todas_criticas_crepusculo
+]
+df = pd.DataFrame({"Crítica": normalized_reviews_crepusculo})
+df.to_csv(
+    os.path.join(output_dir, "critica_crepusculo_normalized.csv"),
+    index=False,
+    sep="\t",
+)
+for critica_crepusculo in normalized_reviews_crepusculo:
+    print(critica_crepusculo, " \n")
 print(
     "____________________________________________________________________________________\n"
 )
 
-
-# 04 - Django
+# Sinopse de Django
+print("Processando sinopse de Django...")
 url = "https://www.adorocinema.com/filmes/filme-190918/"
 driver.get(url)
 url_django = driver.page_source
-# 04 - Sinopse Django.
 regex_django = r'<p class="bo-p">(.*?)</p>'
 match_django = re.findall(regex_django, url_django, re.DOTALL)
-df = pd.DataFrame({"Sinopse": match_django})
-df.to_csv("sinopse_django.txt", index=False, sep="\t")
-print("04 - Sinopse Django:\n")
-for sinopse_django in match_django:
+print(f"Sinopses encontradas: {len(match_django)}")
+normalized_synopsis_django = [normalize_text(synopsis) for synopsis in match_django]
+df = pd.DataFrame({"Sinopse": normalized_synopsis_django})
+sinopse_output_path = os.path.join(output_dir, "sinopse_django_normalized.txt")
+df.to_csv(sinopse_output_path, index=False, sep="\t")
+print(f"Sinopse normalizada salva em: {sinopse_output_path}")
+for sinopse_django in normalized_synopsis_django:
     print(sinopse_django, " \n")
 print(
     "____________________________________________________________________________________\n"
 )
-# 01 - Crítica Django.
+# Críticas de Django
 urls_django = [
     "https://www.adorocinema.com/filmes/filme-190918/criticas/espectadores/",
     "https://www.adorocinema.com/filmes/filme-190918/criticas/espectadores/?page=2",
@@ -174,31 +262,38 @@ for url_django in urls_django:
     page_source = driver.page_source
     match_critica = re.findall(regex_critica_django, page_source, re.DOTALL)
     todas_criticas_django.extend(match_critica)
-df = pd.DataFrame({"Sinopse": todas_criticas_django})
-df.to_csv("sinopse_critica_django.csv", index=False, sep="\t")
-print("01 - Crítica Django:\n")
-for sinopse_critica_django in todas_criticas_django:
-    print(sinopse_critica_django, " \n")
+normalized_reviews_django = [normalize_text(review) for review in todas_criticas_django]
+df = pd.DataFrame({"Crítica": normalized_reviews_django})
+df.to_csv(
+    os.path.join(output_dir, "critica_django_normalized.csv"),
+    index=False,
+    sep="\t",
+)
+for critica_django in normalized_reviews_django:
+    print(critica_django, " \n")
 print(
     "____________________________________________________________________________________\n"
 )
 
-# 05 - O Senhor dos Anéis - A Sociedade do Anel
+# Sinopse de O Senhor dos Anéis - A Sociedade do Anel
+print("Processando sinopse de O Senhor dos Anéis - A Sociedade do Anel...")
 url = "https://www.adorocinema.com/filmes/filme-27070/"
 driver.get(url)
 url_lord = driver.page_source
-# 05 - O Senhor dos Anéis - A Sociedade do Anel
 regex_lord = r'<p class="bo-p">(.*?)</p>'
 match_lord = re.findall(regex_lord, url_lord, re.DOTALL)
-df = pd.DataFrame({"Sinopse": match_lord})
-df.to_csv("sinopse_o_senhor_dos_aneis.txt", index=False, sep="\t")
-print("05 - Sinopse O Senhor dos Anéis - A Sociedade do Anel:\n")
-for sinopse_lord in match_lord:
+print(f"Sinopses encontradas: {len(match_lord)}")
+normalized_synopsis_lord = [normalize_text(synopsis) for synopsis in match_lord]
+df = pd.DataFrame({"Sinopse": normalized_synopsis_lord})
+sinopse_output_path = os.path.join(output_dir, "sinopse_lord_normalized.txt")
+df.to_csv(sinopse_output_path, index=False, sep="\t")
+print(f"Sinopse normalizada salva em: {sinopse_output_path}")
+for sinopse_lord in normalized_synopsis_lord:
     print(sinopse_lord, " \n")
 print(
     "____________________________________________________________________________________\n"
 )
-# Críticas dos usuários
+# Críticas de O Senhor dos Anéis - A Sociedade do Anel
 urls_lords = [
     "https://www.adorocinema.com/filmes/filme-27070/criticas/espectadores/",
     "https://www.adorocinema.com/filmes/filme-27070/criticas/espectadores/?page=2",
@@ -218,15 +313,18 @@ for url_lord in urls_lords:
     page_source = driver.page_source
     match_critica_lord = re.findall(regex_critica_lord, page_source, re.DOTALL)
     todas_criticas_lord.extend(match_critica_lord)
-df = pd.DataFrame({"Sinopse": todas_criticas_lord})
-df.to_csv("sinopse_critica_lord.csv", index=False, sep="\t")
-print("05 - Crítica O Senhor dos Anéis - A Sociedade do Anel:\n")
-for sinopse_critica_lord in todas_criticas_lord:
-    print(sinopse_critica_lord, " \n")
+normalized_reviews_lord = [normalize_text(review) for review in todas_criticas_lord]
+df = pd.DataFrame({"Crítica": normalized_reviews_lord})
+df.to_csv(
+    os.path.join(output_dir, "critica_lord_normalized.csv"),
+    index=False,
+    sep="\t",
+)
+for critica_lord in normalized_reviews_lord:
+    print(critica_lord, " \n")
 print(
     "____________________________________________________________________________________\n"
 )
-
 
 time.sleep(1000)
 # Fecha o navegador
